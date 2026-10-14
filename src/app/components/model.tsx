@@ -19,10 +19,12 @@ export function Model({
   url,
   className = "h-96 w-full",
   position = [0, 0, 10],
+  target = [0, 0, 0],
 }: {
   url: string;
   className?: string;
   position?: [number, number, number];
+  target?: [number, number, number];
 }) {
   return (
     <div className={className}>
@@ -33,9 +35,12 @@ export function Model({
         <OrbitControls
           makeDefault
           enableDamping
+          target={target}
           onChange={(e) => {
-            const { x, y, z } = e?.target.object.position;
-            console.log("camera position", [x, y, z]);
+            const controls = e?.target;
+            if (!controls) return;
+            console.log("camera position", controls.object.position.toArray());
+            console.log("camera target (pan)", controls.target.toArray());
           }}
         />
       </Canvas>
