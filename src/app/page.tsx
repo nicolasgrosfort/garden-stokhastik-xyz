@@ -1,13 +1,11 @@
-import Link from "next/link";
+import Home from "@/content/home.mdx";
 
-export default function Home() {
+export default function Page() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Link href="/blog" className="text-2xl font-semibold underline">
-          Blog
-        </Link>
-      </main>
-    </div>
+    <main className="mx-auto w-full max-w-2xl p-8">
+      <article>
+        <Home />
+      </article>
+    </main>
   );
 }
