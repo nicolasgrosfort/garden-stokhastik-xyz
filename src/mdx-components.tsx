@@ -1,4 +1,6 @@
 import type { MDXComponents } from "mdx/types";
+import SyntaxHighlighter from "react-syntax-highlighter";
+import { a11yDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
@@ -13,9 +15,14 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       <blockquote className="my-4 border-l-4 pl-4 italic opacity-80" {...p} />
     ),
     pre: (p) => (
-      <pre className="my-4 overflow-x-auto rounded bg-black/10 p-4 text-sm dark:bg-white/10" {...p} />
+      <pre
+        className="my-4 overflow-x-auto rounded bg-black/10 p-4 text-sm dark:bg-white/10"
+        {...p}
+      />
     ),
-    code: (p) => <code className="font-mono text-sm" {...p} />,
+    code: (p) => (
+      <SyntaxHighlighter language="typescript" style={a11yDark} {...p} />
+    ),
     ...components,
   };
 }
