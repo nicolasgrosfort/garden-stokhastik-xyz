@@ -1,6 +1,5 @@
+import { Code } from "@/components/code";
 import type { MDXComponents } from "mdx/types";
-import SyntaxHighlighter from "react-syntax-highlighter";
-import { a11yDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
@@ -20,9 +19,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         {...p}
       />
     ),
-    code: (p) => (
-      <SyntaxHighlighter language="typescript" style={a11yDark} {...p} />
-    ),
+    code: (p) => <Code language="typescript" {...p} />,
     ...components,
   };
 }
