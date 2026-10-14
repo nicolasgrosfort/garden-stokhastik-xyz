@@ -1,0 +1,29 @@
+import { InlineModel } from "@/components/inline-model";
+
+export const meta = {
+  title: "Sticky article",
+  date: "2026-10-14",
+  description: "Un premier test du blog MDX.",
+};
+
+## Hello
+
+Salut
+
+<div className="bg-primary text-white h-[300vh] bg-red-400">
+  <span className="sticky  block bg-blue-400 h-screen w-screen left-0 top-0">
+    Sticky
+  </span>
+  <p>Pas sticky</p>
+</div>
+
+<InlineModel />
+
+<div className="bg-primary text-white h-[300vh] bg-red-400">
+  <span className="sticky  block bg-blue-400 h-screen w-screen left-0 top-0">
+    Sticky
+  </span>
+  <p>Pas sticky</p>
+</div>
+
+Ok

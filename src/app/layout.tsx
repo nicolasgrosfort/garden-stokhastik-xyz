@@ -17,7 +17,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${jetbrainsMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        {children}
+        <main className="w-full">{children}</main>
 
         <BackgroundModel />
       </body>

@@ -1,6 +1,6 @@
+import { getSlugs } from "@/lib/posts";
 import Link from "next/link";
 import { Suspense } from "react";
-import { getSlugs } from "@/lib/posts";
 import { PostContent } from "./post-content";
 
 export function generateStaticParams() {
@@ -25,11 +25,13 @@ export default function PostPage({
   params: Promise<{ slug: string }>;
 }) {
   return (
-    <main className="mx-auto w-full max-w-2xl p-8">
-      <Link href="/blog" className="text-sm underline">← Retour</Link>
+    <article>
+      <Link href="/blog" className="text-sm underline">
+        ← Retour
+      </Link>
       <Suspense fallback={<PostSkeleton />}>
         <PostContent params={params} />
       </Suspense>
-    </main>
+    </article>
   );
 }

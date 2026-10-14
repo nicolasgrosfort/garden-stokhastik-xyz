@@ -1,19 +1,9 @@
 "use client";
 
+import { PLYModel } from "@/components/ply-model";
 import { OrbitControls } from "@react-three/drei";
-import { Canvas, useLoader } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import { Suspense } from "react";
-import { PLYLoader } from "three/examples/jsm/loaders/PLYLoader.js";
-
-function PLYGeometry({ url }: { url: string }) {
-  const geometry = useLoader(PLYLoader, url);
-
-  return (
-    <points geometry={geometry}>
-      <pointsMaterial size={0.01} vertexColors={true} sizeAttenuation />
-    </points>
-  );
-}
 
 const buttonClass =
   "rounded border px-3 py-1 text-sm backdrop-blur hover:underline";
@@ -47,7 +37,7 @@ export function Model({
       >
         <Canvas camera={{ position: position, fov: 50 }} eventPrefix="client">
           <Suspense fallback={null}>
-            <PLYGeometry url={url} />
+            <PLYModel url={url} />
           </Suspense>
           <OrbitControls
             makeDefault
