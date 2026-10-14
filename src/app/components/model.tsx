@@ -1,60 +1,43 @@
 "use client";
 
-import { Suspense, useMemo } from "react";
+import { OrbitControls } from "@react-three/drei";
 import { Canvas, useLoader } from "@react-three/fiber";
-import { Bounds, Center, OrbitControls } from "@react-three/drei";
+import { Suspense } from "react";
 import { PLYLoader } from "three/examples/jsm/loaders/PLYLoader.js";
 
-function PlyGeometry({ url }: { url: string }) {
+function PLYGeometry({ url }: { url: string }) {
   const geometry = useLoader(PLYLoader, url);
 
-  const { hasFaces, hasColors } = useMemo(() => {
-    geometry.computeBoundingBox();
-    if (!geometry.attributes.normal && geometry.index) {
-      geometry.computeVertexNormals();
-    }
-    return {
-      hasFaces: geometry.index !== null,
-      hasColors: geometry.hasAttribute("color"),
-    };
-  }, [geometry]);
-
-  // PLY sans faces = nuage de points
-  if (!hasFaces) {
-    return (
-      <points geometry={geometry}>
-        <pointsMaterial size={0.01} vertexColors={hasColors} sizeAttenuation />
-      </points>
-    );
-  }
-
   return (
-    <mesh geometry={geometry}>
-      <meshStandardMaterial vertexColors={hasColors} />
-    </mesh>
+    <points geometry={geometry}>
+      <pointsMaterial size={0.01} vertexColors={true} sizeAttenuation />
+    </points>
   );
 }
 
 export function Model({
   url,
   className = "h-96 w-full",
+  position = [0, 0, 10],
 }: {
   url: string;
   className?: string;
+  position?: [number, number, number];
 }) {
   return (
     <div className={className}>
-      <Canvas camera={{ position: [0, 0, 3], fov: 50 }}>
-        <ambientLight intensity={1} />
-        <directionalLight position={[5, 5, 5]} intensity={2} />
+      <Canvas camera={{ position: position, fov: 50 }}>
         <Suspense fallback={null}>
-          <Bounds fit clip observe margin={1.2}>
-            <Center>
-              <PlyGeometry url={url} />
-            </Center>
-          </Bounds>
+          <PLYGeometry url={url} />
         </Suspense>
-        <OrbitControls makeDefault enableDamping />
+        <OrbitControls
+          makeDefault
+          enableDamping
+          onChange={(e) => {
+            const { x, y, z } = e?.target.object.position;
+            console.log("camera position", [x, y, z]);
+          }}
+        />
       </Canvas>
     </div>
   );
