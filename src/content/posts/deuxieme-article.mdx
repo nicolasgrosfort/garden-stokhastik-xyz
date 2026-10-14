@@ -1,0 +1,19 @@
+export const meta = {
+  title: "Deuxième article",
+  date: "2026-10-15",
+  description: "Encore un test.",
+};
+
+# Deuxième article
+
+Le MDX permet aussi d'utiliser des composants React directement dans le texte.
+
+[Premier article](/blog/premier-article)
+
+export const Note = ({ children }) => (
+  <aside className="my-4 rounded border-l-4 border-emerald-500 bg-emerald-500/10 p-3">
+    {children}
+  </aside>
+);
+
+<Note>Ceci est un composant React dans un article.</Note>
