@@ -1,4 +1,4 @@
-import { Model } from "@/components/model";
+import { BackgroundModel } from "@/components/background-model";
 import type { Metadata } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
@@ -19,14 +19,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         {children}
 
-        <Model
-          url="/models/2026-09-22-vending-machine-foret-daimonji-trail.ply"
-          position={[-1.5713629190625278, 1.495487007130471, 4.252692142611583]}
-          target={[
-            0.21421883804388286, 0.9180186020625465, -0.24367372908056883,
-          ]}
-          fullscreen
-        />
+        <BackgroundModel />
       </body>
     </html>
   );
