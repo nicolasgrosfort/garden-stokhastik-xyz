@@ -131,7 +131,8 @@ export const InlineModel = () => {
   );
 
   return (
-    <div ref={container} className="relative h-[400vh] w-full">
+    <div ref={container} // Pleine largeur d'écran même dans une colonne à largeur max.
+      className="relative ml-[calc(50%-50vw)] h-[400vh] w-screen">
       <div className="sticky top-0 h-screen w-full">
         <Canvas
           camera={{ position: position.toArray(), fov: 50 }}
