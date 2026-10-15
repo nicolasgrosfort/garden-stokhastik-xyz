@@ -9,11 +9,15 @@ import {
   useInView,
   useMotionValue,
   useScroll,
+  useSpring,
   useTransform,
 } from "motion/react";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { AudioContext, type PositionalAudio as PositionalAudioImpl } from "three";
-import { Vector3 } from "three";
+import {
+  AudioContext,
+  type PositionalAudio as PositionalAudioImpl,
+  Vector3,
+} from "three";
 
 const url = "/models/2026-09-22-vending-machine-foret-daimonji-trail.ply";
 const target = new Vector3(
@@ -27,11 +31,12 @@ const position = new Vector3(
   4.252692142611583,
 );
 
-// Phases (progression 0 → 1 de la section figée), l'une après l'autre :
-// apparition (caméra fixe) de 0 à APPEAR_END, mouvement de caméra entre les
-// deux, disparition (caméra fixe) de DISAPPEAR_START à 1.
-const APPEAR_END = 0.25;
-const DISAPPEAR_START = 0.75;
+// Le mouvement de caméra occupe toute la section figée. L'apparition (zoom in)
+// a lieu pendant que la section entre à l'écran, la disparition (zoom out)
+// pendant qu'elle en sort : l'inverse exact de l'apparition.
+
+const ENTER_END = 0.2;
+const LEAVE_START = 0.8;
 
 // Courbe exponentielle normalisée (0 → 0, 1 → 1) : lent au début, rapide à la fin.
 // Plus EASE_STRENGTH est grand, plus le départ est lent et la fin brutale.
@@ -124,9 +129,11 @@ function SpatialAudio({
     const events = ["pointerdown", "keydown", "touchend"] as const;
     const unlock = () => {
       // Les types de three ne déclarent pas `resume`, qui existe bien.
-      (AudioContext.getContext() as unknown as BaseAudioContext & {
-        resume(): Promise<void>;
-      }).resume();
+      (
+        AudioContext.getContext() as unknown as BaseAudioContext & {
+          resume(): Promise<void>;
+        }
+      ).resume();
       setUnlocked(true);
       for (const type of events) window.removeEventListener(type, unlock);
     };
@@ -231,29 +238,34 @@ export const InlineModel = () => {
   const container = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const onScreen = useInView(stage, { amount: 0.5 });
+  // Une seule source de scroll : de l'entrée du haut de la section à la
+  // sortie de son bas. Plusieurs sources se mettent à jour à des moments
+  // différents et se contredisent quand le scroll est rapide.
   const { scrollYProgress } = useScroll({
     target: container,
-    offset: ["start start", "end end"],
+    offset: ["start end", "end start"],
   });
-  const reveal = useTransform(scrollYProgress, (s) => {
-    if (s < APPEAR_END) return easeIn(s / APPEAR_END);
-    if (s >= DISAPPEAR_START) {
-      // Même courbe que l'apparition, parcourue à l'envers dans le temps.
-      return easeIn(1 - (s - DISAPPEAR_START) / (1 - DISAPPEAR_START));
-    }
-    return 1;
-  });
-
+  // Section de 400vh + 100vh d'écran : entrée 0 → 0,2, figée 0,2 → 0,8, sortie 0,8 → 1.
+  const reveal = useSpring(
+    useTransform(scrollYProgress, (p) => {
+      if (p < ENTER_END) return easeIn(p / ENTER_END);
+      if (p > LEAVE_START) return easeIn((1 - p) / (1 - LEAVE_START));
+      return 1;
+    }),
+    { stiffness: 300, damping: 40, restDelta: 0.0005 },
+  );
   const cameraProgress = useTransform(
     scrollYProgress,
-    [APPEAR_END, DISAPPEAR_START],
+    [ENTER_END, LEAVE_START],
     [0, 1],
     { clamp: true },
   );
 
   return (
-    <div ref={container} // Pleine largeur d'écran même dans une colonne à largeur max.
-      className="relative ml-[calc(50%-50vw)] h-[400vh] w-screen">
+    <div
+      ref={container} // Pleine largeur d'écran même dans une colonne à largeur max.
+      className="relative ml-[calc(50%-50vw)] h-[400vh] w-screen"
+    >
       <div ref={stage} className="sticky top-0 h-screen w-full">
         <Canvas
           camera={{ position: position.toArray(), fov: 50 }}
@@ -262,7 +274,7 @@ export const InlineModel = () => {
           style={{ touchAction: "pan-y" }}
         >
           <Suspense fallback={null}>
-            <PLYModel url={url} reveal={reveal} />
+            <PLYModel url={url} reveal={reveal} pivot={target} />
           </Suspense>
           <SpatialAudio url={AUDIO_URL} active={onScreen} volume={reveal} />
           <ScrollRig progress={cameraProgress} />
