@@ -2,12 +2,11 @@
 
 import { PLYModel } from "@/components/ply-model";
 import { PositionalAudio } from "@react-three/drei";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import {
-  animate,
   type MotionValue,
-  useInView,
-  useMotionValue,
+  motion,
+  useMotionValueEvent,
   useScroll,
   useSpring,
   useTransform,
@@ -151,8 +150,6 @@ function SpatialAudio({
   );
 }
 
-const SPRING = { type: "spring", stiffness: 60, damping: 12 } as const;
-const MAX_PITCH = 0.6;
 // Éloignement maximal de la caméra, en multiple de la distance de départ.
 const MOVE_AWAY = 3;
 
@@ -161,64 +158,18 @@ const smoothstep = (edge0: number, edge1: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 
-// Caméra pilotée par le scroll, avec un décalage d'orbite manuel (drag) qui
-// revient à zéro au relâchement, comme aimanté.
+// Caméra pilotée par le scroll uniquement.
 function ScrollRig({ progress }: { progress: MotionValue<number> }) {
-  const gl = useThree((state) => state.gl);
-  const yaw = useMotionValue(0);
-  const pitch = useMotionValue(0);
-
   const offset = position.clone().sub(target);
   const radius = Math.hypot(offset.x, offset.z);
   const height = offset.y;
   const distance = Math.hypot(radius, height);
   const startAngle = Math.atan2(offset.x, offset.z);
-  const startElevation = Math.atan2(height, radius);
-
-  useEffect(() => {
-    const el = gl.domElement;
-    let last: { x: number; y: number } | null = null;
-    let controls: { stop: () => void }[] = [];
-
-    const down = (e: PointerEvent) => {
-      for (const c of controls) c.stop();
-      last = { x: e.clientX, y: e.clientY };
-      el.setPointerCapture(e.pointerId);
-    };
-    const move = (e: PointerEvent) => {
-      if (!last) return;
-      yaw.set(yaw.get() - (e.clientX - last.x) * 0.005);
-      pitch.set(
-        Math.max(
-          -MAX_PITCH,
-          Math.min(MAX_PITCH, pitch.get() + (e.clientY - last.y) * 0.005),
-        ),
-      );
-      last = { x: e.clientX, y: e.clientY };
-    };
-    const up = () => {
-      if (!last) return;
-      last = null;
-      controls = [animate(yaw, 0, SPRING), animate(pitch, 0, SPRING)];
-    };
-
-    el.addEventListener("pointerdown", down);
-    el.addEventListener("pointermove", move);
-    el.addEventListener("pointerup", up);
-    el.addEventListener("pointercancel", up);
-    return () => {
-      el.removeEventListener("pointerdown", down);
-      el.removeEventListener("pointermove", move);
-      el.removeEventListener("pointerup", up);
-      el.removeEventListener("pointercancel", up);
-      for (const c of controls) c.stop();
-    };
-  }, [gl, yaw, pitch]);
+  const elevation = Math.atan2(height, radius);
 
   useFrame((state) => {
     const p = progress.get();
-    const angle = startAngle + p * Math.PI * 2 + yaw.get();
-    const elevation = startElevation + pitch.get();
+    const angle = startAngle + p * Math.PI * 2;
     // S'éloigne (0 → 0,25), reste loin en tournant, puis revient (0,75 → 1).
     const away = smoothstep(0, 0.25, p) * (1 - smoothstep(0.75, 1, p));
     const dist = distance * (1 + MOVE_AWAY * away);
@@ -236,14 +187,18 @@ function ScrollRig({ progress }: { progress: MotionValue<number> }) {
 
 export const InlineModel = () => {
   const container = useRef<HTMLDivElement>(null);
-  const stage = useRef<HTMLDivElement>(null);
-  const onScreen = useInView(stage, { amount: 0.5 });
+  const [onScreen, setOnScreen] = useState(false);
   // Une seule source de scroll : de l'entrée du haut de la section à la
   // sortie de son bas. Plusieurs sources se mettent à jour à des moments
   // différents et se contredisent quand le scroll est rapide.
   const { scrollYProgress } = useScroll({
     target: container,
     offset: ["start end", "end start"],
+  });
+  // Le canvas est fixe à l'écran tant que la section est visible : seul le zoom
+  // s'anime, le modèle ne défile pas avec la page.
+  useMotionValueEvent(scrollYProgress, "change", (p) => {
+    setOnScreen(p > 0 && p < 1);
   });
   // Section de 400vh + 100vh d'écran : entrée 0 → 0,2, figée 0,2 → 0,8, sortie 0,8 → 1.
   const reveal = useSpring(
@@ -266,12 +221,15 @@ export const InlineModel = () => {
       ref={container} // Pleine largeur d'écran même dans une colonne à largeur max.
       className="relative ml-[calc(50%-50vw)] h-[400vh] w-screen"
     >
-      <div ref={stage} className="sticky top-0 h-screen w-full">
+      <motion.div
+        className="pointer-events-none fixed top-0 left-0 h-screen w-screen"
+        style={{
+          opacity: reveal,
+          visibility: onScreen ? "visible" : "hidden",
+        }}
+      >
         <Canvas
           camera={{ position: position.toArray(), fov: 50 }}
-          eventPrefix="client"
-          // Le scroll vertical de la page reste possible au toucher.
-          style={{ touchAction: "pan-y" }}
         >
           <Suspense fallback={null}>
             <PLYModel url={url} reveal={reveal} pivot={target} />
@@ -279,7 +237,7 @@ export const InlineModel = () => {
           <SpatialAudio url={AUDIO_URL} active={onScreen} volume={reveal} />
           <ScrollRig progress={cameraProgress} />
         </Canvas>
-      </div>
+      </motion.div>
     </div>
   );
 };
