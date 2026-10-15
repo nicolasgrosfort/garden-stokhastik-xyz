@@ -19,7 +19,7 @@ jobs:
       - name: Build Next.js
         run: |
           yarn install --frozen-lockfile
-          yarn build --webpack
+          yarn build
 
       - name: List output files
         run: find out/ -print
