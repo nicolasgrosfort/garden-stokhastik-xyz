@@ -23,7 +23,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${jetbrainsMono.variable} h-full antialiased`}>
+    <html lang="fr" className={`${jetbrainsMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col overflow-x-clip">
         <main className="mx-auto w-full max-w-2xl px-4 py-8">{children}</main>
         <BackgroundModel />
