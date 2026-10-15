@@ -9,8 +9,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Stokhastik Garden",
-  description: "Espace de réflexion",
+  title: "Spiritual Stokhastik",
+  description:
+    "Spiritual Stokhastik est un projet de recherche mené par Nicolas Grosfort à la HEAD – Genève, sous la direction de Sabrina Calvo, prenant la forme d’un livre-jeu solitaire qui explore les liens entre anthropomorphisation, domination et entités computationnelles autonomes.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
