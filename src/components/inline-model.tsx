@@ -37,6 +37,11 @@ const position = new Vector3(
 const ENTER_END = 0.2;
 const LEAVE_START = 0.8;
 
+// Valeurs de départ (et d'arrivée à la sortie), de 0 à 1.
+// ZOOM_START : échelle du modèle ; OPACITY_START : opacité du canvas.
+const ZOOM_START = 0.5;
+const OPACITY_START = 0;
+
 // Courbe exponentielle normalisée (0 → 0, 1 → 1) : lent au début, rapide à la fin.
 // Plus EASE_STRENGTH est grand, plus le départ est lent et la fin brutale.
 const EASE_STRENGTH = 5;
@@ -209,6 +214,7 @@ export const InlineModel = () => {
     }),
     { stiffness: 300, damping: 40, restDelta: 0.0005 },
   );
+  const opacity = useTransform(reveal, [0, 1], [OPACITY_START, 1]);
   const cameraProgress = useTransform(
     scrollYProgress,
     [ENTER_END, LEAVE_START],
@@ -224,15 +230,18 @@ export const InlineModel = () => {
       <motion.div
         className="pointer-events-none fixed top-0 left-0 h-screen w-screen"
         style={{
-          opacity: reveal,
+          opacity,
           visibility: onScreen ? "visible" : "hidden",
         }}
       >
-        <Canvas
-          camera={{ position: position.toArray(), fov: 50 }}
-        >
+        <Canvas camera={{ position: position.toArray(), fov: 50 }}>
           <Suspense fallback={null}>
-            <PLYModel url={url} reveal={reveal} pivot={target} />
+            <PLYModel
+              url={url}
+              reveal={reveal}
+              zoomStart={ZOOM_START}
+              pivot={target}
+            />
           </Suspense>
           <SpatialAudio url={AUDIO_URL} active={onScreen} volume={reveal} />
           <ScrollRig progress={cameraProgress} />

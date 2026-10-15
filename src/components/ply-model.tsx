@@ -7,11 +7,14 @@ import { PLYLoader } from "three/examples/jsm/loaders/PLYLoader.js";
 export function PLYModel({
   url,
   reveal,
+  zoomStart = 0,
   pivot,
 }: {
   url: string;
   /** 0 → 1 : échelle du modèle (zoom in / zoom out). Absent = taille normale. */
   reveal?: MotionValue<number>;
+  /** Échelle quand `reveal` vaut 0 (0 → 1). */
+  zoomStart?: number;
   /** Point autour duquel le zoom s'effectue. */
   pivot?: Vector3;
 }) {
@@ -21,7 +24,9 @@ export function PLYModel({
   useFrame(() => {
     if (!reveal || !group.current) return;
     // Une échelle strictement nulle rend la matrice non inversible.
-    group.current.scale.setScalar(Math.max(reveal.get(), 1e-4));
+    group.current.scale.setScalar(
+      Math.max(zoomStart + (1 - zoomStart) * reveal.get(), 1e-4),
+    );
   });
 
   return (
