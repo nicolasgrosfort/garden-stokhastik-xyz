@@ -6,6 +6,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     h1: (p) => <h1 className="mb-6 text-4xl font-bold" {...p} />,
     h2: (p) => <h2 className="mb-3 mt-8 text-2xl font-semibold" {...p} />,
     h3: (p) => <h3 className="mb-2 mt-6 text-xl font-semibold" {...p} />,
+    h4: (p) => <h4 className="mb-2 mt-6 text-lg font-semibold" {...p} />,
     p: (p) => <p className="my-4 leading-7 text-pretty" {...p} />,
     a: (p) => <a className="underline underline-offset-2" {...p} />,
     ul: (p) => <ul className="my-4 list-disc pl-6" {...p} />,
@@ -16,7 +17,10 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       </div>
     ),
     th: (p) => (
-      <th className="border-b border-current/30 px-3 py-2 font-semibold" {...p} />
+      <th
+        className="border-b border-current/30 px-3 py-2 font-semibold"
+        {...p}
+      />
     ),
     td: (p) => (
       <td className="border-b border-current/10 px-3 py-2 align-top" {...p} />
