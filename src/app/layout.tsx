@@ -1,5 +1,5 @@
 import { BackgroundModel } from "@/components/background-model";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -13,6 +13,8 @@ export const metadata: Metadata = {
   description:
     "Spiritual Stokhastik est un projet de recherche mené par Nicolas Grosfort à la HEAD – Genève, sous la direction de Sabrina Calvo, prenant la forme d’un livre-jeu solitaire qui explore les liens entre anthropomorphisation, domination et entités computationnelles autonomes.",
 };
+
+export const viewport: Viewport = { viewportFit: "cover" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

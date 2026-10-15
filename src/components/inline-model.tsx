@@ -228,7 +228,7 @@ export const InlineModel = () => {
       className="relative ml-[calc(50%-50vw)] h-[400vh] w-screen"
     >
       <motion.div
-        className="pointer-events-none fixed top-0 left-0 h-screen w-screen"
+        className="pointer-events-none fixed inset-0 h-dvh w-dvw"
         style={{
           opacity,
           visibility: onScreen ? "visible" : "hidden",
