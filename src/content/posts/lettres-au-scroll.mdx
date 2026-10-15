@@ -1,0 +1,38 @@
+import { ScrollLetters } from "@/components/scroll-letters";
+
+export const meta = {
+  title: "Lettres au scroll",
+  date: "2026-10-15",
+  description: "Prototype : un texte qui apparaît lettre par lettre en scrollant.",
+};
+
+# Lettres au scroll
+
+Un prototype. Fais défiler la page : chaque paragraphe ci-dessous se révèle au fur et à mesure qu'il monte dans l'écran.
+
+## De gauche à droite
+
+<ScrollLetters>
+  Le texte se dévoile dans l'ordre de la lecture. Rien n'est caché, tout est déjà
+  là, mais ton geste décide du moment où il devient lisible.
+</ScrollLetters>
+
+<div className="h-[60vh]" aria-hidden />
+
+## Dans un ordre aléatoire
+
+<ScrollLetters order="random">
+  Ici les lettres surgissent dans le désordre. Le sens se forme par fragments,
+  comme une réponse que l'on ne maîtrise pas tout à fait.
+</ScrollLetters>
+
+<div className="h-[60vh]" aria-hidden />
+
+## Un passage plus long
+
+<ScrollLetters>
+  Qui est esclave de qui ? La question reste suspendue jusqu'à ce que la
+  dernière lettre apparaisse, et même alors, elle n'attend pas de réponse.
+</ScrollLetters>
+
+<div className="h-[80vh]" aria-hidden />

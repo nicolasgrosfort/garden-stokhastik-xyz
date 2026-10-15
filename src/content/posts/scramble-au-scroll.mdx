@@ -1,0 +1,23 @@
+import { InlineScramble } from "@/components/inline-scramble";
+
+export const meta = {
+  title: "Scramble au scroll",
+  date: "2026-10-15",
+  description:
+    "Prototype : un texte fixe à l'écran qui se résout depuis le brouillé, comme le modèle 3D.",
+};
+
+# Scramble au scroll
+
+Fais défiler la page. La section ci-dessous fonctionne comme le modèle 3D : son contenu reste fixe à l'écran pendant qu'elle est visible.
+
+<InlineScramble text="Qui est-ce ?" />
+
+Un second passage, plus long, pour voir le comportement sur plusieurs lignes.
+
+<InlineScramble
+  height={400}
+  text="Plutôt que de résoudre l'opacité, on en fait le point de départ d'une relation."
+/>
+
+Fin du prototype.
