@@ -1,4 +1,5 @@
 import { getAllPosts } from "@/lib/posts";
+import { formatDate } from "@/lib/format-date";
 import Link from "next/link";
 
 export default async function BlogPage() {
@@ -15,7 +16,7 @@ export default async function BlogPage() {
             >
               {p.title}
             </Link>
-            <p className="text-sm opacity-60">{p.date}</p>
+            <p className="text-sm opacity-60">{formatDate(p.date)}</p>
             {p.description && <p>{p.description}</p>}
           </li>
         ))}
