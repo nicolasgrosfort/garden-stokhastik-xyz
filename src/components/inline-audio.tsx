@@ -34,6 +34,16 @@ const MAX_RATE = 2;
 const SEEK_BEHIND = 3;
 const SEEK_AHEAD = 0.4;
 
+// La vitesse de lecture rejoint sa valeur visée en douceur (par seconde, plus
+// c'est grand plus c'est rapide) : pas de saut de hauteur en entrant ou en
+// sortant de la zone « bon tempo ».
+const RATE_EASING = 6;
+
+// Hystérésis de la zone « bon tempo » : on y entre à ±GOOD_BAND, on n'en sort
+// qu'à ±GOOD_BAND × GOOD_EXIT, pour que le marqueur au bord ne fasse pas
+// clignoter le tempo.
+const GOOD_EXIT = 1.4;
+
 // Délai sans scroll avant d'éteindre le son (ms), puis durée du fondu (ms).
 const IDLE_MS = 600;
 const FADE_MS = 500;
@@ -106,16 +116,22 @@ export const InlineAudio = ({
 
   const opacity = useTransform(scrollYProgress, (p) => opacityAt(sanitize(p)));
 
-  const paint = (raw: number) => {
-    const p = sanitize(raw);
-    progress.current = p;
+  // Barre et temps affichés pour une position t (0 → 1) dans le morceau.
+  const paintTrack = (t: number) => {
     const el = audio.current;
-    const t = trackAt(p);
     const duration = el && Number.isFinite(el.duration) ? el.duration : 0;
     if (barEl.current) barEl.current.style.transform = `scaleX(${t})`;
     if (timeEl.current) {
       timeEl.current.textContent = `${format(t * duration)} / ${format(duration)}`;
     }
+  };
+
+  const paint = (raw: number) => {
+    const p = sanitize(raw);
+    progress.current = p;
+    const t = trackAt(p);
+    // Une fois le son activé, c'est la lecture qui fait foi (voir la boucle).
+    if (!enabledRef.current) paintTrack(t);
   };
 
   // Progression lissée : c'est elle que suivent le son, la barre et la jauge.
@@ -153,6 +169,10 @@ export const InlineAudio = ({
     let lastP = sanitize(smooth.get());
     let lastT = performance.now();
     let speed = 0;
+    // Sens du scroll lissé (> 0 : vers le bas) et état de la zone « bon tempo ».
+    let dir = 0;
+    let inBand = false;
+    let rate = 1;
     // Niveau du fondu (0 = éteint, 1 = plein), indépendant de el.volume que
     // iOS ignore : c'est lui qui décide de la mise en pause.
     let level = 0;
@@ -167,10 +187,19 @@ export const InlineAudio = ({
       if (dt > 0) {
         const inst = (Math.abs(p - lastP) * span) / dt;
         speed += (inst - speed) * SPEED_SMOOTHING;
+        dir += ((p - lastP) * span - dir) * SPEED_SMOOTHING;
         lastP = p;
         lastT = now;
       }
       const duration = el && Number.isFinite(el.duration) ? el.duration : 0;
+
+      const ideal =
+        duration > 0 ? (span * (PLAY_END - PLAY_START)) / duration : 0;
+      const ratio = ideal > 0 ? speed / ideal : 0;
+      const log = ratio > 0.01 ? Math.log2(ratio) : -GAUGE_RANGE;
+      inBand =
+        ratio >= 0.05 &&
+        Math.abs(log) <= (inBand ? GOOD_BAND * GOOD_EXIT : GOOD_BAND);
 
       if (el && duration > 0 && enabledRef.current) {
         const atEdge = p <= PLAY_START || p >= PLAY_END;
@@ -178,10 +207,21 @@ export const InlineAudio = ({
         const target = trackAt(p) * duration;
         const gap = target - el.currentTime;
         if (active) {
-          if (gap > SEEK_BEHIND || gap < -SEEK_AHEAD) el.currentTime = target;
-          else {
-            el.playbackRate = clamp(1 + gap * CHASE_GAIN, MIN_RATE, MAX_RATE);
+          // Dans la zone « bon tempo » le son joue à 1× exactement, sans
+          // rattrapage ni saut en avant : la lecture fait foi et l'écart avec
+          // le scroll peut grandir. Seul un scroll vers le haut recale en
+          // arrière (la lecture ne peut pas reculer).
+          // Hors zone, le son accélère ou ralentit pour rejoindre le scroll.
+          let desired = 1;
+          if (inBand) {
+            if (dir < 0 && gap < -SEEK_AHEAD) el.currentTime = target;
+          } else if (gap > SEEK_BEHIND || gap < -SEEK_AHEAD) {
+            el.currentTime = target;
+          } else {
+            desired = clamp(1 + gap * CHASE_GAIN, MIN_RATE, MAX_RATE);
           }
+          rate += (desired - rate) * Math.min(1, dt * RATE_EASING);
+          el.playbackRate = Math.abs(rate - 1) < 0.005 ? 1 : rate;
           if (el.paused) el.play().catch(() => {});
         }
         level = clamp(
@@ -191,12 +231,9 @@ export const InlineAudio = ({
         );
         el.volume = level;
         if (!active && level === 0 && !el.paused) el.pause();
+        paintTrack(clamp(el.currentTime / duration, 0, 1));
       }
 
-      const ideal =
-        duration > 0 ? (span * (PLAY_END - PLAY_START)) / duration : 0;
-      const ratio = ideal > 0 ? speed / ideal : 0;
-      const log = ratio > 0.01 ? Math.log2(ratio) : -GAUGE_RANGE;
       const pos =
         clamp(log, -GAUGE_RANGE, GAUGE_RANGE) / (2 * GAUGE_RANGE) + 0.5;
       if (markerEl.current) {
@@ -206,7 +243,7 @@ export const InlineAudio = ({
         hintEl.current.textContent =
           ratio < 0.05
             ? "scrolle"
-            : Math.abs(log) <= GOOD_BAND
+            : inBand
               ? "bon tempo"
               : log < 0
                 ? "plus vite"
